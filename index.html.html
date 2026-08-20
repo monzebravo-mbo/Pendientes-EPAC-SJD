@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Pendientes · SJD</title>
+<style>
+  :root{
+    --bg: #0A0E27;
+    --panel: #161B42;
+    --panel-2: #212966;
+    --line: #3B3F8C;
+    --amber: #FFB627;
+    --amber-dim: #B8842A;
+    --teal: #00E5C3;
+    --coral: #FF4D6D;
+    --violet: #B388FF;
+    --pink: #FF6EC7;
+    --sky: #4FC3F7;
+    --lime: #C6FF4D;
+    --text: #F5F7FF;
+    --muted: #9AA0D4;
+    --mono: ui-monospace, "SF Mono", "Consolas", "Menlo", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1000px 500px at 15% -10%, rgba(179,136,255,0.20) 0%, transparent 55%),
+      radial-gradient(900px 500px at 100% 0%, rgba(0,229,195,0.15) 0%, transparent 50%),
+      radial-gradient(1200px 700px at 50% 100%, rgba(255,110,199,0.10) 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding:16px 12px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    padding:4px 4px 14px;border-bottom:1px solid var(--line);margin-bottom:16px;
+  }
+  header .brand{font-family:var(--mono);letter-spacing:2px;font-size:12px;color:var(--muted);text-transform:uppercase;}
+  header .title{font-size:20px;font-weight:700;margin-top:2px;}
+  header .clock{font-family:var(--mono);font-size:12px;color:var(--amber);text-align:right;}
+
+  /* Spotlight */
+  .spotlight{
+    background:linear-gradient(145deg, #2A2E7A, #1B1F5C);
+    border:1px solid var(--amber);
+    box-shadow:0 0 0 1px rgba(255,182,39,0.15), 0 8px 30px rgba(255,182,39,0.12);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .spotlight::before{
+    content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(0deg, rgba(245,166,35,0.03) 0 2px, transparent 2px 4px);
+    pointer-events:none;
+  }
+  .spotlight-label{
+    font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--amber);
+    text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;
+  }
+  .spotlight-label .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pulse 2s infinite;}
+  @media (prefers-reduced-motion: reduce){.spotlight-label .dot{animation:none;}}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+  .spotlight-text{font-size:19px;font-weight:600;line-height:1.35;margin-bottom:10px;}
+  .spotlight-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .badge{
+    font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:5px;
+    border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+  }
+  .badge.due{color:var(--coral);border-color:rgba(255,107,74,0.4);}
+  .badge.due.today{background:rgba(255,107,74,0.15);}
+  .spotlight-empty{color:var(--muted);font-size:14px;}
+
+  /* Tabs */
+  .tabs{
+    display:flex;gap:6px;overflow-x:auto;padding:2px 2px 14px;margin-bottom:4px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;font-family:var(--mono);font-size:12px;letter-spacing:0.5px;
+    padding:8px 14px;border-radius:20px;border:1px solid var(--line);
+    background:var(--panel);color:var(--muted);cursor:pointer;user-select:none;
+    white-space:nowrap;transition:all .15s;
+  }
+  .tab.active{background:var(--amber);color:#1a1206;border-color:var(--amber);font-weight:700;}
+
+  /* Quick add */
+  .add-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px;margin-bottom:22px;
+  }
+  .add-box input[type=text]{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;
+    color:var(--text);padding:10px 12px;font-size:15px;margin-bottom:8px;font-family:var(--sans);
+  }
+  .add-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .add-row select, .add-row input[type=date]{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:7px;
+    color:var(--text);padding:8px 10px;font-size:13px;font-family:var(--sans);flex:1;min-width:120px;
+  }
+  .star-toggle{
+    display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:7px;
+    border:1px solid var(--line);background:var(--panel-2);cursor:pointer;user-select:none;font-size:13px;color:var(--muted);
+  }
+  .star-toggle.active{color:var(--amber);border-color:var(--amber-dim);}
+  .add-btn{
+    width:100%;margin-top:10px;background:var(--amber);color:#1a1206;border:none;
+    border-radius:7px;padding:11px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--sans);
+  }
+  .add-btn:active{opacity:0.85;}
+  .new-cat-input{
+    width:100%;background:var(--panel-2);border:1px solid var(--amber-dim);border-radius:7px;
+    color:var(--text);padding:9px 12px;font-size:14px;margin-top:8px;font-family:var(--sans);
+  }
+
+  /* Categories */
+  .cat{margin-bottom:14px;}
+  .cat-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 4px;cursor:pointer;user-select:none;
+  }
+  .cat-head-left{display:flex;align-items:center;gap:8px;}
+  .cat-icon{font-size:15px;}
+  .cat-name{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .cat-count{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--panel-2);padding:1px 7px;border-radius:10px;}
+  .chevron{color:var(--muted);font-size:11px;transition:transform .15s;}
+  .cat.collapsed .chevron{transform:rotate(-90deg);}
+  .cat.collapsed .cat-items{display:none;}
+  .cat-items{display:flex;flex-direction:column;gap:6px;}
+
+  .task{
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:10px 10px;display:flex;align-items:center;gap:10px;
+  }
+  .task.status-listo{opacity:0.5;}
+  .status-btn{
+    flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);
+    background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:transparent;font-size:12px;
+  }
+  .status-btn.progreso{border-color:var(--amber);color:var(--amber);}
+  .status-btn.progreso::after{content:"◐";}
+  .status-btn.listo{border-color:var(--teal);background:var(--teal);color:#062622;}
+  .status-btn.listo::after{content:"✓";}
+
+  .task-body{flex:1;min-width:0;}
+  .task-text{font-size:14.5px;line-height:1.3;word-break:break-word;}
+  .task.status-listo .task-text{text-decoration:line-through;color:var(--muted);}
+  .task-tags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center;}
+
+  .progress-track{
+    flex:1;min-width:50px;height:6px;border-radius:3px;background:var(--line);
+    overflow:hidden;
+  }
+  .progress-fill{height:100%;border-radius:3px;transition:width .2s;}
+  .progress-pct{font-family:var(--mono);font-size:10px;color:var(--muted);}
+
+  .date-pill{
+    display:inline-flex;align-items:center;gap:4px;padding:2px 6px 2px 8px;
+    border-radius:5px;border:1px solid var(--line);background:var(--panel-2);
+  }
+  .date-pill-icon{font-size:10px;}
+  .due-input{
+    background:transparent;border:none;color:var(--muted);font-family:var(--mono);
+    font-size:11px;padding:0;color-scheme:dark;max-width:88px;cursor:pointer;
+  }
+  .due-input:focus{outline:none;color:var(--text);}
+  .due-clear{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0 2px;line-height:1;}
+  .due-clear:hover{color:var(--coral);}
+
+  .task-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto;}
+  .icon-btn{
+    background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;line-height:1;
+  }
+  .icon-btn.star.active{color:var(--amber);}
+  .icon-btn.del:hover{color:var(--coral);}
+
+  .empty-cat{color:var(--muted);font-size:13px;padding:8px 4px;font-style:italic;}
+
+  footer{text-align:center;margin-top:26px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+  footer button{
+    background:none;border:1px solid var(--line);color:var(--muted);
+    font-family:var(--mono);font-size:11px;padding:7px 14px;border-radius:6px;cursor:pointer;
+  }
+  .loading{text-align:center;color:var(--muted);padding:40px 0;font-family:var(--mono);font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">SJD · Terminal de pendientes</div>
+      <div class="title">Mis pendientes</div>
+    </div>
+    <div class="clock" id="clock"></div>
+  </header>
+
+  <div id="app">
+    <div class="loading">Cargando tablero…</div>
+  </div>
+
+  <footer>
+    <button id="exportBtn">⬇️ Exportar JSON</button>
+    <button id="importBtn">⬆️ Importar JSON</button>
+    <button id="resetBtn">Reiniciar tablero</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+  </footer>
+</div>
+
+<script>
+const CATS = [
+  {id:'bajas', icon:'✈️', name:'Bajas de activos', color:'#4FC3F7'},
+  {id:'cumplimiento', icon:'📋', name:'Cumplimiento / SIG', color:'#FF4D6D'},
+  {id:'compras', icon:'🧾', name:'Cotizaciones / Compras', color:'#FFB627'},
+  {id:'personas', icon:'👥', name:'Personas', color:'#FF6EC7'},
+  {id:'reportes', icon:'📊', name:'Reportes / Minutas', color:'#B388FF'},
+  {id:'infra', icon:'🛠️', name:'Infraestructura', color:'#00E5C3'},
+  {id:'recurrente', icon:'🔁', name:'Recurrente', color:'#C6FF4D'},
+  {id:'otros', icon:'🎉', name:'Eventos / Otros', color:'#FF9F4F'},
+];
+
+const STORAGE_KEY = 'pendientes-monse-tasks';
+
+function seedTasks(){
+  const mk = (text, cat, opts={}) => ({
+    id: crypto.randomUUID(),
+    text, cat,
+    due: opts.due || null,
+    starred: !!opts.starred,
+    progress: 0
+  });
+  return [
+    mk('Baja de equipo TENNANT', 'bajas'),
+    mk('Baja de botes de basura / unifilas', 'bajas'),
+    mk('Baja de computadoras, radios', 'bajas'),
+    mk('Firmar docs 2025 SIG', 'cumplimiento'),
+    mk('Revisar video de Mike (requerimientos)', 'cumplimiento'),
+    mk('Matriz de Riesgos y Oportunidades', 'cumplimiento'),
+    mk('Pedir seguimiento Plan de Mejora 2026 2T', 'cumplimiento'),
+    mk('Enviar evidencias aud. interna 2025', 'cumplimiento'),
+    mk('Hacer autoevaluaciones', 'cumplimiento'),
+    mk('Pedir cotización de chalecos en base a tallas', 'compras'),
+    mk('Buscar bote para T1', 'compras'),
+    mk('Ver lo de factura de tapetes en AX', 'compras'),
+    mk('Pedir cotización de contenedor de basura', 'compras'),
+    mk('Reprogramar vacaciones con Blanca', 'personas'),
+    mk('Revisar radios con Oscar', 'personas'),
+    mk('Tramitar docs de inglés', 'personas'),
+    mk('Ver lo del curso de globoflexia', 'personas'),
+    mk('Revisar info ASQ por terminal', 'reportes'),
+    mk('Hacer reporte de cumplimiento de actividades EPAC (enero–julio)', 'reportes'),
+    mk('Minuta RxD 1T 2026', 'reportes'),
+    mk('Minuta RxD 2T 2026', 'reportes'),
+    mk('Zona azul T1', 'infra'),
+    mk('AROMA en plafón puerta 17', 'infra'),
+    mk('Nómina', 'recurrente'),
+    mk('Presupuesto 2027', 'recurrente', {due:'2026-08-17', starred:true}),
+    mk('6 memorias con imagen de Safety Fair', 'otros'),
+  ];
+}
+
+let tasks = [];
+let customCats = [];
+let collapsedCats = {};
+let activeTab = 'todos';
+
+function allCats(){ return CATS.concat(customCats); }
+
+async function loadTasks(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(Array.isArray(parsed)){
+        tasks = parsed;
+        customCats = [];
+      } else {
+        tasks = parsed.tasks || [];
+        customCats = parsed.customCats || [];
+      }
+    } else {
+      tasks = seedTasks();
+      customCats = [];
+      await saveAll();
+    }
+  }catch(e){
+    tasks = seedTasks();
+    customCats = [];
+    try{ await saveAll(); }catch(e2){ console.error('No se pudo guardar', e2); }
+  }
+  render();
+}
+
+async function saveAll(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify({tasks, customCats}), false);
+  }catch(e){
+    console.error('Error guardando', e);
+  }
+}
+
+function slugify(s){
+  return s.toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'cat';
+}
+
+const CUSTOM_PALETTE = ['#4FC3F7','#FF4D6D','#FFB627','#FF6EC7','#B388FF','#00E5C3','#C6FF4D','#FF9F4F','#F06292','#7C4DFF','#26C6DA','#FFD54F'];
+
+function addCustomCategory(name){
+  const base = slugify(name);
+  let id = base, i = 1;
+  while(allCats().some(c => c.id === id)){ id = `${base}-${i++}`; }
+  const color = CUSTOM_PALETTE[allCats().length % CUSTOM_PALETTE.length];
+  customCats.push({id, icon:'🏷️', name: name.trim(), color});
+  return id;
+}
+
+function fmtDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString('es-MX', {day:'2-digit', month:'short'});
+}
+
+function daysUntil(iso){
+  if(!iso) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const [y,m,d] = iso.split('-').map(Number);
+  const target = new Date(y, m-1, d);
+  return Math.round((target - today) / 86400000);
+}
+
+function statusOf(t){
+  if(t.progress >= 100) return 'listo';
+  if(t.progress > 0) return 'progreso';
+  return 'pendiente';
+}
+
+function getSpotlight(){
+  const open = tasks.filter(t => t.progress < 100);
+  const withDue = open.filter(t => t.due).sort((a,b) => a.due.localeCompare(b.due));
+  if(withDue.length) return withDue[0];
+  const starred = open.filter(t => t.starred);
+  if(starred.length) return starred[0];
+  return null;
+}
+
+function cycleProgress(id){
+  const t = tasks.find(x => x.id === id);
+  if(!t) return;
+  const steps = [0,25,50,75,100];
+  const idx = steps.indexOf(t.progress);
+  t.progress = idx === -1 ? 25 : steps[(idx + 1) % steps.length];
+  saveAll(); render();
+}
+
+function setDueDate(id, value){
+  const t = tasks.find(x => x.id === id);
+  if(!t) return;
+  t.due = value || null;
+  saveAll(); render();
+}
+
+function toggleStar(id){
+  const t = tasks.find(x => x.id === id);
+  if(!t) return;
+  t.starred = !t.starred;
+  saveAll(); render();
+}
+
+function deleteTask(id){
+  tasks = tasks.filter(x => x.id !== id);
+  saveAll(); render();
+}
+
+function toggleCat(id){
+  collapsedCats[id] = !collapsedCats[id];
+  render();
+}
+
+function switchTab(id){
+  activeTab = id;
+  render();
+}
+
+function addTask(text, cat, due, starred){
+  tasks.push({id: crypto.randomUUID(), text, cat, due: due || null, starred: !!starred, progress: 0});
+  saveAll(); render();
+}
+
+function taskRow(t, catColor){
+  const cat = allCats().find(c => c.id === t.cat);
+  const color = catColor || cat.color;
+  const status = statusOf(t);
+  const dInfo = t.due ? daysUntil(t.due) : null;
+  let soonBadge = '';
+  if(t.due && status !== 'listo' && dInfo <= 3){
+    if(dInfo < 0) soonBadge = `<span class="badge due today">Venció hace ${Math.abs(dInfo)}d</span>`;
+    else if(dInfo === 0) soonBadge = `<span class="badge due today">Hoy</span>`;
+    else soonBadge = `<span class="badge due">⏰ ${dInfo}d</span>`;
+  }
+  const datePill = status !== 'listo' ? `
+    <label class="date-pill">
+      <span class="date-pill-icon">📅</span>
+      <input type="date" class="due-input" value="${t.due||''}" onchange="setDueDate('${t.id}', this.value)" onclick="event.stopPropagation()">
+      ${t.due ? `<button class="due-clear" onclick="event.stopPropagation(); setDueDate('${t.id}','')" aria-label="Quitar fecha">✕</button>` : ''}
+    </label>` : '';
+  return `
+    <div class="task status-${status}" style="border-left:3px solid ${color};">
+      <button class="status-btn ${status}" onclick="cycleProgress('${t.id}')" aria-label="Avanzar progreso" style="${status==='pendiente' ? `border-color:${color}` : ''}"></button>
+      <div class="task-body">
+        <div class="task-text">${escapeHtml(t.text)}</div>
+        <div class="task-tags">
+          ${datePill}
+          ${soonBadge}
+          ${status !== 'listo' ? `
+            <div class="progress-track" onclick="cycleProgress('${t.id}')" style="cursor:pointer;">
+              <div class="progress-fill" style="width:${t.progress}%;background:${color};"></div>
+            </div>
+            <span class="progress-pct">${t.progress}%</span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="icon-btn star ${t.starred ? 'active':''}" onclick="toggleStar('${t.id}')" aria-label="Marcar urgente">${t.starred ? '★' : '☆'}</button>
+        <button class="icon-btn del" onclick="deleteTask('${t.id}')" aria-label="Eliminar">✕</button>
+      </div>
+    </div>`;
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function flatList(items){
+  if(items.length === 0){
+    return `<div class="empty-cat">Nada aquí por ahora.</div>`;
+  }
+  return `<div class="cat-items">${items.map(t => taskRow(t)).join('')}</div>`;
+}
+
+function render(){
+  const app = document.getElementById('app');
+  const spotlight = getSpotlight();
+  const spotCat = spotlight ? allCats().find(c => c.id === spotlight.cat) : null;
+
+  let spotHtml;
+  if(spotlight){
+    const dInfo = spotlight.due ? daysUntil(spotlight.due) : null;
+    let dueTxt = '';
+    if(spotlight.due){
+      if(dInfo < 0) dueTxt = `<span class="badge due today">Venció hace ${Math.abs(dInfo)} día(s)</span>`;
+      else if(dInfo === 0) dueTxt = `<span class="badge due today">Vence hoy</span>`;
+      else dueTxt = `<span class="badge due">Vence en ${dInfo} día(s) · ${fmtDate(spotlight.due)}</span>`;
+    }
+    spotHtml = `
+      <div class="spotlight-label"><span class="dot"></span>Próxima salida</div>
+      <div class="spotlight-text">${escapeHtml(spotlight.text)}</div>
+      <div class="spotlight-meta">
+        <span class="badge">${spotCat.icon} ${spotCat.name}</span>
+        ${dueTxt}
+      </div>`;
+  } else {
+    spotHtml = `
+      <div class="spotlight-label"><span class="dot"></span>Próxima salida</div>
+      <div class="spotlight-empty">Nada marcado como urgente todavía. Toca la ★ en un pendiente para destacarlo aquí, o dale una fecha límite.</div>`;
+  }
+
+  const tabDefs = [
+    {id:'todos', label:'Todos'},
+    {id:'urgentes', label:'★ Urgentes'},
+    {id:'fecha', label:'📅 Por fecha'},
+    {id:'progreso', label:'◐ En progreso'},
+  ];
+  const tabsHtml = `<div class="tabs">${tabDefs.map(tb =>
+    `<div class="tab ${activeTab===tb.id?'active':''}" onclick="switchTab('${tb.id}')">${tb.label}</div>`
+  ).join('')}</div>`;
+
+  let bodyHtml = '';
+
+  if(activeTab === 'todos'){
+    bodyHtml = allCats().map(c => {
+      const items = tasks.filter(t => t.cat === c.id)
+        .sort((a,b) => (statusOf(a)==='listo') - (statusOf(b)==='listo') || (a.due||'9999').localeCompare(b.due||'9999'));
+      if(items.length === 0) return '';
+      const isCollapsed = collapsedCats[c.id];
+      const pendCount = items.filter(t => statusOf(t) !== 'listo').length;
+      return `
+        <div class="cat ${isCollapsed ? 'collapsed':''}" style="--catcolor:${c.color}">
+          <div class="cat-head" onclick="toggleCat('${c.id}')">
+            <div class="cat-head-left">
+              <span class="cat-icon">${c.icon}</span>
+              <span class="cat-name" style="color:${c.color}">${c.name}</span>
+              <span class="cat-count" style="color:${c.color};border:1px solid ${c.color}66;background:${c.color}22;">${pendCount}</span>
+            </div>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="cat-items">${items.map(t => taskRow(t, c.color)).join('')}</div>
+        </div>`;
+    }).join('');
+  } else if(activeTab === 'urgentes'){
+    const items = tasks.filter(t => statusOf(t) !== 'listo' && (t.starred || (t.due && daysUntil(t.due) <= 3)))
+      .sort((a,b) => {
+        const aScore = a.due ? daysUntil(a.due) : 999;
+        const bScore = b.due ? daysUntil(b.due) : 999;
+        return aScore - bScore;
+      });
+    bodyHtml = flatList(items);
+  } else if(activeTab === 'fecha'){
+    const withDate = tasks.filter(t => t.due && statusOf(t) !== 'listo').sort((a,b) => a.due.localeCompare(b.due));
+    const noDate = tasks.filter(t => !t.due && statusOf(t) !== 'listo');
+    bodyHtml = `
+      ${flatList(withDate)}
+      ${noDate.length ? `<div class="cat-name" style="margin:16px 0 8px 4px;">Sin fecha</div>${flatList(noDate)}` : ''}
+    `;
+  } else if(activeTab === 'progreso'){
+    const items = tasks.filter(t => statusOf(t) === 'progreso')
+      .sort((a,b) => b.progress - a.progress);
+    bodyHtml = items.length
+      ? flatList(items)
+      : `<div class="empty-cat">Nada iniciado todavía. Cuando avances algo, aparecerá aquí para que veas tu impulso.</div>`;
+  }
+
+  app.innerHTML = `
+    <div class="spotlight">${spotHtml}</div>
+
+    <div class="add-box">
+      <input type="text" id="newText" placeholder="Nuevo pendiente…" maxlength="200">
+      <div class="add-row">
+        <select id="newCat" onchange="onCatSelectChange()">
+          ${CATS.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+          ${customCats.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+          <option value="__new__">➕ Otra… (crear categoría)</option>
+        </select>
+        <input type="date" id="newDue">
+        <div class="star-toggle" id="newStar" onclick="this.classList.toggle('active')">☆ Urgente</div>
+      </div>
+      <input type="text" id="newCatName" class="new-cat-input" placeholder="Nombre de la nueva categoría…" maxlength="40" style="display:none;">
+      <button class="add-btn" onclick="submitNew()">Agregar pendiente</button>
+    </div>
+
+    ${tabsHtml}
+    ${bodyHtml}
+  `;
+
+  document.getElementById('newText').addEventListener('keydown', e => {
+    if(e.key === 'Enter') submitNew();
+  });
+}
+
+function onCatSelectChange(){
+  const sel = document.getElementById('newCat');
+  const wrap = document.getElementById('newCatName');
+  if(sel.value === '__new__'){
+    wrap.style.display = 'block';
+    wrap.focus();
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function submitNew(){
+  const textEl = document.getElementById('newText');
+  const catEl = document.getElementById('newCat');
+  const dueEl = document.getElementById('newDue');
+  const starEl = document.getElementById('newStar');
+  const newCatNameEl = document.getElementById('newCatName');
+  const text = textEl.value.trim();
+  if(!text) return;
+  let catId = catEl.value;
+  if(catId === '__new__'){
+    const name = newCatNameEl.value.trim();
+    if(!name){ newCatNameEl.focus(); return; }
+    catId = addCustomCategory(name);
+  }
+  addTask(text, catId, dueEl.value, starEl.classList.contains('active'));
+}
+
+async function resetBoard(){
+  if(!confirm('Esto borra todos los pendientes guardados (incluyendo categorías nuevas que hayas creado) y vuelve a cargar la lista de agosto. ¿Continuar?')) return;
+  tasks = seedTasks();
+  customCats = [];
+  await saveAll();
+  render();
+}
+function exportJSON(){
+  const data = JSON.stringify({tasks, customCats}, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `pendientes-sjd-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function handleImportFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      const importedTasks = Array.isArray(parsed) ? parsed : (parsed.tasks || []);
+      const importedCats = Array.isArray(parsed) ? [] : (parsed.customCats || []);
+      if(!Array.isArray(importedTasks)) throw new Error('formato inválido');
+      if(!confirm(`Se importarán ${importedTasks.length} pendientes y reemplazarán lo que hay guardado aquí. ¿Continuar?`)) return;
+      tasks = importedTasks;
+      customCats = importedCats;
+      await saveAll();
+      render();
+    }catch(err){
+      alert('Ese archivo no parece un JSON válido de este tablero.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+document.getElementById('resetBtn').addEventListener('click', resetBoard);
+document.getElementById('exportBtn').addEventListener('click', exportJSON);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', handleImportFile);
+
+function tickClock(){
+  const now = new Date();
+  const opts = {weekday:'short', day:'2-digit', month:'short'};
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('es-MX', opts).toUpperCase() + ' · ' +
+    now.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+}
+tickClock();
+setInterval(tickClock, 30000);
+
+loadTasks();
+</script>
+</body>
+</html>
