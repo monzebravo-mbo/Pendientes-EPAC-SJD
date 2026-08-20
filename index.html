@@ -201,10 +201,9 @@
       <div class="brand">SJD · Terminal de pendientes</div>
       <div class="title">Mis pendientes</div>
     </div>
+    
     <div class="clock" id="clock"></div>
-   manifest.json
-<meta name="theme-color" content="#FFB627
-  </header>
+     </header>
 
   <div id="app">
     <div class="loading">Cargando tablero…</div>
@@ -279,9 +278,9 @@ function allCats(){ return CATS.concat(customCats); }
 
 async function loadTasks(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
+  const res = localStorage.getItem(STORAGE_KEY);
+    if(res){
+    const parsed = JSON.parse(res);
       if(Array.isArray(parsed)){
         tasks = parsed;
         customCats = [];
@@ -304,7 +303,10 @@ async function loadTasks(){
 
 async function saveAll(){
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify({tasks, customCats}), false);
+    localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({tasks, customCats})
+);
   }catch(e){
     console.error('Error guardando', e);
   }
