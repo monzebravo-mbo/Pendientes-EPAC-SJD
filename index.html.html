@@ -202,6 +202,8 @@
       <div class="title">Mis pendientes</div>
     </div>
     <div class="clock" id="clock"></div>
+    manifest.json
+<meta name="theme-color" content="#FFB627
   </header>
 
   <div id="app">
@@ -649,5 +651,10 @@ setInterval(tickClock, 30000);
 
 loadTasks();
 </script>
+  <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+<
 </body>
 </html>
