@@ -1,0 +1,8 @@
+{
+  "name": "Pendientes SJD",
+  "short_name": "Pendientes",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0A0E27",
+  "theme_color": "#FFB627"
+}
